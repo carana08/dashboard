@@ -1,3 +1,4 @@
+import React from 'react';
 //import { useState } from 'react'
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
 import Indicator from './components/Indicator';
