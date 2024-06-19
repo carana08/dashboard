@@ -20,9 +20,6 @@ function App() {
 			<Grid xs={6} sm={4} md={3} lg={3}><Summary></Summary></Grid>
 			<Grid xs={6} sm={4} md={3} lg={9}><BasicTable /></Grid>
 
-			{/* <Grid xs={6} sm={4} md={6} lg={2}>5</Grid>
-	      <Grid xs={6} sm={4} md={6} lg={2}>6</Grid> */}
-
 		</Grid>
 	)
 }
