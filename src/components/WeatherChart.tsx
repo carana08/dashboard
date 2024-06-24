@@ -2,7 +2,7 @@ import { Chart } from "react-google-charts";
 import Paper from '@mui/material/Paper';
 export default function WeatherChart() {
 
-    {/* Configuración */}
+    {/* Configuración */ }
 
     let options = {
         title: "Precipitación, Humedad y Nubosidad vs Hora",
@@ -10,7 +10,7 @@ export default function WeatherChart() {
         legend: { position: "right" },
     }
 
-    {/* Datos de las variables meteorológicas */}
+    {/* Datos de las variables meteorológicas */ }
 
     const data = [
         ["Hora", "Precipitación", "Humedad", "Nubosidad"],
@@ -23,7 +23,7 @@ export default function WeatherChart() {
         ["21:00", 5, 77, 99]
     ];
 
-    {/* JSX */}
+    {/* JSX */ }
 
     return (
         <Paper
@@ -39,7 +39,8 @@ export default function WeatherChart() {
                 width="100%"
                 height="400px"
                 options={options}
-        />
+                legendToggle
+            />
         </Paper>
     )
 }	

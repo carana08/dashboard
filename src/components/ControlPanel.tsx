@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
+// import Select from '@mui/material/Select';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 
@@ -13,7 +14,7 @@ export default function ControlPanel() {
 
     let [selected, setSelected] = useState(-1)
 
-    {/* Variable de referencia a un elemento */ }
+    // {/* Variable de referencia a un elemento */ }
 
     const descriptionRef = useRef<HTMLDivElement>(null);
 
