@@ -5,6 +5,9 @@ import Indicator from './components/Indicator';
 import Summary from './components/Summary';
 import BasicTable from './components/BasicTable';
 import Weather from './components/Weather';
+import WeatherChart from './components/WeatherChart';
+import ControlPanel from './components/ControlPanel';
+
 import './App.css'
 
 function App() {
@@ -20,6 +23,15 @@ function App() {
 			<Grid xs={12} sm={4} md={3} lg={4}><Indicator title='Presión Atmosférica' subtitle='Probabilidad' value={0.13} /></Grid>
 			<Grid xs={6} sm={4} md={3} lg={3}><Summary></Summary></Grid>
 			<Grid xs={6} sm={4} md={3} lg={9}><BasicTable /></Grid>
+			<Grid xs={12} lg={10}>
+             <WeatherChart></WeatherChart>
+         </Grid>
+		 <Grid xs={12} lg={2}>
+             <ControlPanel />
+         </Grid>
+         <Grid xs={12} lg={10}>
+             <WeatherChart></WeatherChart>
+         </Grid>
 
 		</Grid>
 	)
