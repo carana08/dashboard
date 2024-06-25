@@ -5,52 +5,42 @@ import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-// import Select from '@mui/material/Select';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-
 
 export default function ControlPanel() {
     {/* Variable de estado y función de actualización */ }
 
-    let [selected, setSelected] = useState(-1)
+    const [, setSelected] = useState(-1);  // Mantener la variable de estado si es necesaria para la lógica de selección
 
-    // {/* Variable de referencia a un elemento */ }
+    {/* Variable de referencia a un elemento */ }
 
     const descriptionRef = useRef<HTMLDivElement>(null);
 
-    // Datos de los elementos del Select
-    let items = [
+    {/* Datos de los elementos del Select */ }
+
+    const items = [
         { "name": "Precipitación", "description": "Cantidad de agua, en forma de lluvia, nieve o granizo, que cae sobre una superficie en un período específico." },
         { "name": "Humedad", "description": "Cantidad de vapor de agua presente en el aire, generalmente expresada como un porcentaje." },
         { "name": "Nubosidad", "description": "Grado de cobertura del cielo por nubes, afectando la visibilidad y la cantidad de luz solar recibida." }
-    ]
+    ];
 
-    let options = items.map((item, key) => <MenuItem key={key} value={key}>{item["name"]}</MenuItem>)
+    const options = items.map((item, key) => <MenuItem key={key} value={key}>{item["name"]}</MenuItem>);
 
-    //  {/* Manejador de eventos */}
-
-    //  const handleChange = (event: SelectChangeEvent) => {
-
-    //     let idx = parseInt(event.target.value)
-    //     setSelected( idx );
-
-    // };
-    {/* Manejador de eventos */ }
+    {/* Manejador de eventos */}
 
     const handleChange = (event: SelectChangeEvent) => {
-
-        let idx = parseInt(event.target.value)
+        const idx = parseInt(event.target.value);
         setSelected(idx);
 
-        {/* Modificación de la referencia */ }
+        {/* Modificación de la referencia */}
 
         if (descriptionRef.current !== null) {
             descriptionRef.current.innerHTML = (idx >= 0) ? items[idx]["description"] : ""
         }
-
     };
 
-    // JSX
+    {/* JSX */ }
+
     return (
         <Paper
             sx={{
@@ -79,14 +69,7 @@ export default function ControlPanel() {
                 </FormControl>
             </Box>
             {/* Muestra la descripción de la variable seleccionada */}
-            {/* <Typography mt={2} component="p" color="text.secondary">
-             {
-                 (selected >= 0)?items[selected]["description"]:""
-             }
-             </Typography> */}
-            {/* Muestra la descripción de la variable seleccionada */}
             <Typography ref={descriptionRef} mt={2} component="p" color="text.secondary" />
-
         </Paper>
     );
 }
