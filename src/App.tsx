@@ -1,5 +1,208 @@
-// // import React from 'react';
-// //import { useState } from 'react'
+//import React from 'react';
+import { useEffect, useState } from 'react';
+import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
+import Indicator from './components/Indicator';
+import Summary from './components/Summary';
+import BasicTable from './components/BasicTable';
+import ControlPanel from './components/ControlPanel';
+import WeatherChart from './components/WeatherChart';
+import Weather from './components/Weather';//agregado propio
+import { WeatherData } from './interfaces/weatherData'; //agregado propio
+import './App.css';
+
+interface RowData {
+	rangeHours: string;
+	windDirection: string;
+  }
+
+function App() {
+
+	const [weatherData, setWeatherData] = useState<WeatherData | null>(null);//Agregado propio
+
+	const handleWeatherChange = (data: WeatherData) => {
+		setWeatherData(data);
+	};//Agregado propio
+
+	{/* 
+         1. Agregue la variable de estado (dataTable) y función de actualización (setDataTable).
+     */}
+
+	const [rowsTable, setRowsTable] = useState<RowData[]>([])
+
+	// Variable de estado y función de actualización
+	const [indicators, setIndicators] = useState<JSX.Element[]>([]);
+
+	// Hook: useEffect
+	useEffect(() => {
+		(async () => {
+
+
+			{/* 2. Del LocalStorage, obtiene el valor de las claves openWeatherMap y expiringTime */ }
+
+			let savedTextXML = localStorage.getItem("openWeatherMap")
+			let expiringTime = localStorage.getItem("expiringTime")
+
+			{/* 3. Obtenga la estampa de tiempo actual */ }
+
+			let nowTime = (new Date()).getTime();
+
+			{/* 4. Realiza la petición asicrónica cuando: 
+			(1) La estampa de tiempo de expiración (expiringTime) es nula, o  
+			(2) La estampa de tiempo actual es mayor al tiempo de expiración */}
+
+			if (expiringTime === null || nowTime > parseInt(expiringTime)) {
+
+				{/* 5. Request */ }
+
+				let API_KEY = "590e3a9acf390c64ba2bee56065a0366"
+				let response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Guayaquil&mode=xml&appid=${API_KEY}`)
+				savedTextXML = await response.text();
+
+
+				{/* 6. Diferencia de tiempo */ }
+
+				let hours = 1
+				let delay = hours * 3600000
+
+
+				{/* 7. En el LocalStorage, almacena texto en la clave openWeatherMap y la estampa de tiempo de expiración */ }
+
+				localStorage.setItem("openWeatherMap", savedTextXML)
+				localStorage.setItem("expiringTime", (nowTime + delay).toString())
+			}
+
+			// XML Parser
+			const parser = new DOMParser();
+			const xml = parser.parseFromString(savedTextXML || '', 'application/xml');
+
+			// // Procesar los datos del XML para la tabla
+			// let dataFromXML = Array.from(xml.getElementsByTagName("time")).map((timeElement) => {
+			// 	let rangeHours = `${timeElement.getAttribute("from").split("T")[1]} - ${timeElement.getAttribute("to").split("T")[1]}`;
+			// 	let windDirection = `${timeElement.getElementsByTagName("windDirection")[0].getAttribute("deg")} ${timeElement.getElementsByTagName("windDirection")[0].getAttribute("code")}`;
+
+			// 	return { rangeHours, windDirection };
+			// });
+
+			// // Limitar los datos a 8 elementos
+			// dataFromXML = dataFromXML.slice(0, 8);
+
+			// // Actualizar el estado de rowsTable con los datos procesados
+			// setRowsTable(dataFromXML);
+
+
+			// Arreglo para agregar los resultados
+			let dataToIndicators = new Array();
+
+			// Análisis, extracción y almacenamiento del contenido del XML en el arreglo de resultados
+			let location = xml.getElementsByTagName('location')[1];
+			let geobaseid = location.getAttribute('geobaseid');
+			let latitude = location.getAttribute('latitude');
+			let longitude = location.getAttribute('longitude');
+
+			// Extraer el nombre de la ciudad
+			let cityName = xml.getElementsByTagName('name')[0].textContent;
+
+			dataToIndicators.push(['Location', 'City', cityName]);
+			dataToIndicators.push(['Location', 'geobaseid', geobaseid]);
+			dataToIndicators.push(['Location', 'Latitude', latitude]);
+			dataToIndicators.push(['Location', 'Longitude', longitude]);
+
+			console.log(dataToIndicators);
+
+			// Renderice el arreglo de resultados en un arreglo de elementos Indicator
+			let indicatorsElements = Array.from(dataToIndicators).map((element) => (
+				<Indicator title={element[0]} subtitle={element[1]} value={element[2]} />
+			));
+
+			// Modificación de la variable de estado mediante la función de actualización
+			setIndicators(indicatorsElements);
+
+			{/* 
+                 2. Procese los resultados de acuerdo con el diseño anterior.
+                    Revise la estructura del documento XML para extraer los datos necesarios. 
+             */}
+
+			let arrayObjects = Array.from(xml.getElementsByTagName("time")).map((timeElement) => {
+
+				let rangeHours = (timeElement.getAttribute("from")?.split("T") ?? "") + " - " + (timeElement.getAttribute("to")?.split("T") ?? "")
+
+				let windDirection = timeElement.getElementsByTagName("windDirection")[0].getAttribute("deg") + " " + timeElement.getElementsByTagName("windDirection")[0].getAttribute("code")
+
+				return { rangeHours, windDirection }
+
+			})
+
+			arrayObjects = arrayObjects.slice(0, 8)
+
+			{/* 3. Actualice de la variable de estado mediante la función de actualización */ }
+
+			// Simular la actualización del estado de rowsTable con los datos procesados
+			setRowsTable(arrayObjects);
+		})();
+	}, []);
+
+	return (
+		<Grid container spacing={5}>
+			<Grid xs={12} sm={4} md={3} lg={12}>
+			<h1>Reporte del Clima</h1>
+		</Grid>
+			{/* Aquí puedes renderizar tus componentes */}
+			<Grid xs={6} lg={2}>
+				{indicators[0]}
+			</Grid>
+			<Grid xs={6} lg={2}>
+				{indicators[1]}
+			</Grid>
+			<Grid xs={6} lg={2}>
+				{indicators[2]}
+			</Grid>
+			<Grid xs={6} lg={2}>
+				{indicators[3]}
+			</Grid>
+			<Grid xs={6} sm={4} md={3} lg={3}>
+				<Summary />
+			</Grid>
+			<Grid xs={6} sm={4} md={3} lg={12}>
+				{/* Renderizar la tabla básica con los datos */}
+				<BasicTable rows={rowsTable} />
+			</Grid>
+			<Grid xs={12} lg={12}>
+				<Grid xs={12} lg={2}>
+					<ControlPanel />
+					<WeatherChart />
+				</Grid>
+			</Grid>
+			
+			{/*Agregado propio*/}
+		<Grid xs={12} sm={4} md={3} lg={12}>
+			<h1>Reporte del clima en otras</h1>
+			<Weather onWeatherChange={handleWeatherChange} />
+		</Grid>
+		<Grid xs={12} sm={4} md={3} lg={6}>
+			<Indicator title="Temperatura Máx." subtitle="Grados Centrigrados" value={weatherData?.main.temp_max ?? 0} />
+		</Grid>
+		<Grid xs={12} sm={4} md={3} lg={6}>
+			<Indicator title="Temperatura Mín." subtitle="Grados Centigrados" value={weatherData?.main.temp_min ?? 0} />
+		</Grid>
+		<Grid xs={12} sm={4} md={3} lg={4}>
+			<Indicator title="Velocidad del viento" subtitle="m/s" value={weatherData?.wind.speed ?? 0} />
+		</Grid>
+		{/* <Grid xs={12} sm={4} md={3} lg={4}>
+        <Indicator title="Radiación UV" subtitle="Probabilidad" value={weatherData?.uv.value ?? 0} />
+      </Grid> */}
+		<Grid xs={12} sm={4} md={3} lg={4}>
+			<Indicator title="Presión Atmosférica" subtitle="hPa" value={weatherData?.main.pressure ?? 0} />
+		</Grid>
+		</Grid>
+	);
+}
+		
+		export default App;
+
+
+
+// import { useEffect } from 'react';
+// import { useEffect, useState } from 'react';
 // import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
 // import Indicator from './components/Indicator';
 // import Summary from './components/Summary';
@@ -7,100 +210,220 @@
 // import Weather from './components/Weather';
 // import WeatherChart from './components/WeatherChart';
 // import ControlPanel from './components/ControlPanel';
-
-// import './App.css'
+// import './App.css';
+// import { WeatherData } from './interfaces/weatherData'; // Importa la interfaz desde types.ts
 
 // function App() {
 
-// 	return (
-// 		<Grid container spacing={5}>
-// 			<Grid xs={12} sm={4} md={3} lg={12}><h1>Weather Dashboard</h1>
-// 				<Weather /></Grid>
-// 			<Grid xs={12} sm={4} md={3} lg={6}><Indicator title='Temperatura Máx.' subtitle='Probabilidad' value={0.13} /></Grid>
-// 			<Grid xs={12} sm={4} md={3} lg={6}><Indicator title='Temperatura Mín' subtitle='Probabilidad' value={0.13} /></Grid>
-// 			<Grid xs={12} sm={4} md={3} lg={4}><Indicator title='Velocidad del viento' subtitle='Probabilidad' value={0.13} /></Grid>
-// 			<Grid xs={12} sm={4} md={3} lg={4}><Indicator title='Radiación UV' subtitle='Probabilidad' value={0.13} /></Grid>
-// 			<Grid xs={12} sm={4} md={3} lg={4}><Indicator title='Presión Atmosférica' subtitle='Probabilidad' value={0.13} /></Grid>
-// 			<Grid xs={6} sm={4} md={3} lg={3}><Summary></Summary></Grid>
-// 			<Grid xs={6} sm={4} md={3} lg={9}><BasicTable /></Grid>
-// 			<Grid xs={12} lg={10}>
-//              <WeatherChart></WeatherChart>
-//          </Grid>
-// 		 <Grid xs={12} lg={2}>
-//              <ControlPanel />
-//          </Grid>
-//          <Grid xs={12} lg={10}>
-//              <WeatherChart></WeatherChart>
-//          </Grid>
+// 	{/* 
+//          1. Agregue la variable de estado (dataTable) y función de actualización (setDataTable).
+//      */}
 
+//      let [rowsTable, setRowsTable] = useState([])
+
+// 	const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+
+// 	const handleWeatherChange = (data: WeatherData) => {
+// 		setWeatherData(data);
+// 	};
+
+
+
+// 	{/* Variable de estado y función de actualización */}
+
+// 	let [indicators, setIndicators] = useState([])
+// 	// const [cityName, setCityName] = useState('');
+// 	{/* Hook: useEffect */ }
+
+// 	useEffect(()=>{
+// 		(async ()=>{
+// 			{/* Del LocalStorage, obtiene el valor de las claves openWeatherMap y expiringTime */}
+
+// 			let savedTextXML = localStorage.getItem("openWeatherMap")
+// 			let expiringTime = localStorage.getItem("expiringTime")
+   
+// 			{/* Estampa de tiempo actual */}
+   
+// 			let nowTime = (new Date()).getTime();
+   
+// 			{/* Realiza la petición asicrónica cuando: 
+// 				(1) La estampa de tiempo de expiración (expiringTime) es nula, o  
+// 				(2) La estampa de tiempo actual es mayor al tiempo de expiración */}
+   
+// 			if(expiringTime === null || nowTime > parseInt(expiringTime)) {
+
+// 				{/* Diferencia de tiempo */}
+
+// 				let hours = 1
+// 				let delay = hours * 3600000
+   
+   
+// 				{/* En el LocalStorage, almacena texto en la clave openWeatherMap y la estampa de tiempo de expiración */}
+   
+// 				localStorage.setItem("openWeatherMap", savedTextXML)
+// 				localStorage.setItem("expiringTime", (nowTime + delay ).toString() )
+// 			}
+
+
+
+// 			{/* Request */}
+
+// 			let API_KEY = "590e3a9acf390c64ba2bee56065a0366"
+// 			let response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Guayaquil&mode=xml&appid=${API_KEY}`)
+// 			savedTextXML = await response.text();
+
+// 			{/* XML Parser */}
+
+// 			const parser = new DOMParser();
+// 			const xml = parser.parseFromString(savedTextXML, "application/xml");
+
+// 			{/* Arreglo para agregar los resultados */}
+
+// 			let dataToIndicators = new Array()
+
+// 			{/* 
+// 				Análisis, extracción y almacenamiento del contenido del XML 
+// 				en el arreglo de resultados
+// 			*/}
+
+		
+// 			let location = xml.getElementsByTagName("location")[1]
+
+// 			// let cityName = location.getElementsByTagName("name")[0].textContent; // Extrae el nombre de la ciudad
+// 			// dataToIndicators.push(["Location","City", cityName])
+
+// 			// let cityName = location.getElementsByTagName("name")[0].textContent; // Extrae el nombre de la ciudad
+// 			// setCityName(cityName);
+   
+   
+// 			let geobaseid = location.getAttribute("geobaseid")
+// 			dataToIndicators.push(["Location","geobaseid", geobaseid])
+   
+// 			let latitude = location.getAttribute("latitude")
+// 			dataToIndicators.push(["Location","Latitude", latitude])
+   
+// 			let longitude = location.getAttribute("longitude")
+// 			dataToIndicators.push(["Location","Longitude", longitude])
+   
+// 			console.log( dataToIndicators )
+
+// 			 {/* Renderice el arreglo de resultados en un arreglo de elementos Indicator */}
+
+// 			 let indicatorsElements = Array.from(dataToIndicators).map(
+// 				(element) => <Indicator title={element[0]} subtitle={element[1]} value={element[2]} />
+// 			)
+			   
+// 			{/* Modificación de la variable de estado mediante la función de actualización */}
+   
+// 			setIndicators(indicatorsElements)
+
+// 			{/* 
+//              2. Procese los resultados de acuerdo con el diseño anterior.
+//              Revise la estructura del documento XML para extraer los datos necesarios. 
+//          */}
+
+//          let arrayObjects = Array.from( xml.getElementsByTagName("time") ).map( (timeElement) =>  {
+				
+// 			let rangeHours = timeElement.getAttribute("from").split("T")[1] + " - " + timeElement.getAttribute("to").split("T")[1]
+
+// 			let windDirection = timeElement.getElementsByTagName("windDirection")[0].getAttribute("deg") + " "+  timeElement.getElementsByTagName("windDirection")[0].getAttribute("code") 
+			   
+// 			return { "rangeHours": rangeHours,"windDirection": windDirection }
+		   
+// 		})
+
+// 		arrayObjects = arrayObjects.slice(0,8)
+	   
+// 		{/* 3. Actualice de la variable de estado mediante la función de actualización */}
+
+// 		setRowsTable(arrayObjects)
+
+
+// 		})()
+		
+
+// 	},[])
+
+
+// 		{/* Arreglo de dependencias */}  
+
+// return (
+
+
+// 	<Grid container spacing={5}>
+	// 	<Grid xs={12} sm={4} md={3} lg={12}>
+	// 		<h1>Reporte del Clima</h1>
+	// 	</Grid>
+	// 	<Grid xs={12} sm={4} md={3} lg={12}>
+	// 		<h1>Weather Dashboard</h1>
+	// 		<Weather onWeatherChange={handleWeatherChange} />
+	// 	</Grid>
+	// 	<Grid xs={12} sm={4} md={3} lg={6}>
+	// 		<Indicator title="Temperatura Máx." subtitle="Grados Centrigrados" value={weatherData?.main.temp_max ?? 0} />
+	// 	</Grid>
+	// 	<Grid xs={12} sm={4} md={3} lg={6}>
+	// 		<Indicator title="Temperatura Mín." subtitle="Grados Centigrados" value={weatherData?.main.temp_min ?? 0} />
+	// 	</Grid>
+	// 	<Grid xs={12} sm={4} md={3} lg={4}>
+	// 		<Indicator title="Velocidad del viento" subtitle="m/s" value={weatherData?.wind.speed ?? 0} />
+	// 	</Grid>
+	// 	{/* <Grid xs={12} sm={4} md={3} lg={4}>
+    //     <Indicator title="Radiación UV" subtitle="Probabilidad" value={weatherData?.uv.value ?? 0} />
+    //   </Grid> */}
+	// 	<Grid xs={12} sm={4} md={3} lg={4}>
+	// 		<Indicator title="Presión Atmosférica" subtitle="hPa" value={weatherData?.main.pressure ?? 0} />
+	// 	</Grid>
+// 		<Grid xs={6} sm={4} md={3} lg={3}>
+// 			<Summary />
 // 		</Grid>
-// 	)
+// 		<Grid xs={6} sm={4} md={3} lg={12}>
+// 			<BasicTable />
+// 		</Grid>
+// 		{/* <Grid xs={12} lg={10}>
+//         <WeatherChart />
+//       </Grid> */}
+// 		{/* <Grid xs={12} lg={2}>
+//         <ControlPanel />
+//       </Grid> */}
+// 		<Grid xs={12} lg={12}>
+// 			<Grid xs={12} lg={2}>
+// 				<ControlPanel />
+// 			</Grid>
+// 			<WeatherChart />
+// 		</Grid>
+// 			<Grid xs={6} lg={2}>
+
+// 				{indicators[0]}
+
+// 				{/* <Indicator title='Precipitación' subtitle='Probabilidad' value={0.13} /> */}
+			   
+// 			</Grid>
+			   
+// 			<Grid xs={6} lg={2}>
+
+// 				{indicators[1]}
+				   
+// 				{/* <Indicator title='Precipitación' subtitle='Probabilidad' value={0.13} /> */}
+			   
+// 			</Grid>
+			   
+// 			<Grid xs={6} lg={2}>
+
+// 				{indicators[2]}
+				   
+// 				{/* <Indicator title='Precipitación' subtitle='Probabilidad' value={0.13} /> */}
+			   
+// 			</Grid>
+// 			<Grid xs={12} lg={8}>
+
+//              {/* 4. Envíe la variable de estado (dataTable) como prop (input) del componente (BasicTable) */}
+
+//              <BasicTable rows={rowsTable}></BasicTable>
+// 			 </Grid>
+			 
+
+// 	</Grid>
+// );
 // }
 
-import { useState } from 'react';
-import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
-import Indicator from './components/Indicator';
-import Summary from './components/Summary';
-import BasicTable from './components/BasicTable';
-import Weather from './components/Weather';
-import WeatherChart from './components/WeatherChart';
-import ControlPanel from './components/ControlPanel';
-import './App.css';
-import { WeatherData } from './interfaces/weatherData'; // Importa la interfaz desde types.ts
-
-function App() {
-	const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-
-	const handleWeatherChange = (data: WeatherData) => {
-		setWeatherData(data);
-	};
-
-	return (
-		<Grid container spacing={5}>
-			<Grid xs={12} sm={4} md={3} lg={12}>
-				<h1>Reporte del Clima</h1>
-			</Grid>
-			<Grid xs={12} sm={4} md={3} lg={12}>
-				<h1>Weather Dashboard</h1>
-				<Weather onWeatherChange={handleWeatherChange} />
-			</Grid>
-			<Grid xs={12} sm={4} md={3} lg={6}>
-				<Indicator title="Temperatura Máx." subtitle="Grados Centrigrados" value={weatherData?.main.temp_max ?? 0} />
-			</Grid>
-			<Grid xs={12} sm={4} md={3} lg={6}>
-				<Indicator title="Temperatura Mín." subtitle="Grados Centigrados" value={weatherData?.main.temp_min ?? 0} />
-			</Grid>
-			<Grid xs={12} sm={4} md={3} lg={4}>
-				<Indicator title="Velocidad del viento" subtitle="m/s" value={weatherData?.wind.speed ?? 0} />
-			</Grid>
-			{/* <Grid xs={12} sm={4} md={3} lg={4}>
-        <Indicator title="Radiación UV" subtitle="Probabilidad" value={weatherData?.uv.value ?? 0} />
-      </Grid> */}
-			<Grid xs={12} sm={4} md={3} lg={4}>
-				<Indicator title="Presión Atmosférica" subtitle="hPa" value={weatherData?.main.pressure ?? 0} />
-			</Grid>
-			<Grid xs={6} sm={4} md={3} lg={3}>
-				<Summary />
-			</Grid>
-			<Grid xs={6} sm={4} md={3} lg={12}>
-				<BasicTable />
-			</Grid>
-			{/* <Grid xs={12} lg={10}>
-        <WeatherChart />
-      </Grid> */}
-			{/* <Grid xs={12} lg={2}>
-        <ControlPanel />
-      </Grid> */}
-			<Grid xs={12} lg={12}>
-				<Grid xs={12} lg={2}>
-					<ControlPanel />
-				</Grid>
-				<WeatherChart />
-			</Grid>
-		</Grid>
-	);
-}
-
-export default App;
-
-
+// export default App;
