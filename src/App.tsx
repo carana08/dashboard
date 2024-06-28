@@ -8,7 +8,9 @@ import ControlPanel from './components/ControlPanel';
 import WeatherChart from './components/WeatherChart';
 import Weather from './components/Weather';//agregado propio
 import { WeatherData } from './interfaces/weatherData'; //agregado propio
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';//agrergado propio
 import './App.css';
+import { faCalendarAlt, faEarth, faLocationDot, faMapPin, faTemperatureHigh, faTemperatureLow } from '@fortawesome/free-solid-svg-icons';
 
 interface RowData {
 	rangeHours: string;
@@ -18,6 +20,7 @@ interface RowData {
 function App() {
 
 	const [weatherData, setWeatherData] = useState<WeatherData | null>(null);//Agregado propio
+	// const [weatherData2, setWeatherData2] = useState({ temp_min: 0, temp_max: 0 });//agrergado propio
 
 	const handleWeatherChange = (data: WeatherData) => {
 		setWeatherData(data);
@@ -59,6 +62,7 @@ function App() {
 				savedTextXML = await response.text();
 
 
+
 				{/* 6. Diferencia de tiempo */ }
 
 				let hours = 1
@@ -75,21 +79,6 @@ function App() {
 			const parser = new DOMParser();
 			const xml = parser.parseFromString(savedTextXML || '', 'application/xml');
 
-			// // Procesar los datos del XML para la tabla
-			// let dataFromXML = Array.from(xml.getElementsByTagName("time")).map((timeElement) => {
-			// 	let rangeHours = `${timeElement.getAttribute("from").split("T")[1]} - ${timeElement.getAttribute("to").split("T")[1]}`;
-			// 	let windDirection = `${timeElement.getElementsByTagName("windDirection")[0].getAttribute("deg")} ${timeElement.getElementsByTagName("windDirection")[0].getAttribute("code")}`;
-
-			// 	return { rangeHours, windDirection };
-			// });
-
-			// // Limitar los datos a 8 elementos
-			// dataFromXML = dataFromXML.slice(0, 8);
-
-			// // Actualizar el estado de rowsTable con los datos procesados
-			// setRowsTable(dataFromXML);
-
-
 			// Arreglo para agregar los resultados
 			let dataToIndicators = new Array();
 
@@ -98,14 +87,50 @@ function App() {
 			let geobaseid = location.getAttribute('geobaseid');
 			let latitude = location.getAttribute('latitude');
 			let longitude = location.getAttribute('longitude');
+			
 
 			// Extraer el nombre de la ciudad
 			let cityName = xml.getElementsByTagName('name')[0].textContent;
 
-			dataToIndicators.push(['Location', 'City', cityName]);
-			dataToIndicators.push(['Location', 'geobaseid', geobaseid]);
-			dataToIndicators.push(['Location', 'Latitude', latitude]);
-			dataToIndicators.push(['Location', 'Longitude', longitude]);
+			let tempMin = xml.getElementsByTagName("temperature")[0].getAttribute("min");//agregado propio
+			let tempMax = xml.getElementsByTagName("temperature")[0].getAttribute("max");//agregado propio
+			let date = xml.getElementsByTagName("time")[0].getAttribute("from");//agregado propio
+
+			//quedarse solo con al fecha y eliminar la hora
+				
+
+			{/*Agregado propio*/}
+			//temp max en grados centigrados
+			if (tempMax !== null) {
+			  tempMax = (parseFloat(tempMax) - 273.15).toFixed(2);
+			} else {
+			  tempMax = "N/A";
+			}
+
+			if (tempMin !== null) {
+				tempMin = (parseFloat(tempMin) - 273.15).toFixed(2);
+			  } else {
+				tempMin = "N/A";
+			  }
+
+			{/*Agregado propio*/}
+			let iconoUbicacion = <FontAwesomeIcon icon={faLocationDot} color='red' size='3x' />
+			let iconoFecha = <FontAwesomeIcon icon={faCalendarAlt} color='#CB12F4' size='3x' />
+			let iconoLatitud = <FontAwesomeIcon icon={faMapPin} color='#15E55A' size='3x' />
+			let iconoLongitud = <FontAwesomeIcon icon={faMapPin} color='#BBBE09' size='3x' />
+			let iconoPlaneta = <FontAwesomeIcon icon={faEarth} color='green' size='3x' />
+			let iconoTempMax= <FontAwesomeIcon icon={faTemperatureHigh} color='red' size='3x' />
+			let iconoTempMin = <FontAwesomeIcon icon={faTemperatureLow} color='#0B61A2' size='3x' />
+		  	/****************/
+			
+			dataToIndicators.push([iconoUbicacion, 'Ciudad', cityName]);
+			dataToIndicators.push([iconoPlaneta, 'geobaseid', geobaseid]);
+			dataToIndicators.push([iconoLatitud, 'Latituds', latitude]);
+			dataToIndicators.push([iconoLongitud, 'Longitud', longitude]);
+			dataToIndicators.push([iconoTempMax, 'Temperatura Máxima', tempMax+"°C"]);{/*Agregado propio*/}
+			dataToIndicators.push([iconoTempMin, 'Temperatura Mínima', tempMin+"°C"]);{/*Agregado propio*/}
+			dataToIndicators.push([iconoFecha, 'Fecha', date?.split("T")[0]]);{/*Agregado propio*/}
+			
 
 			console.log(dataToIndicators);
 
@@ -138,6 +163,7 @@ function App() {
 
 			// Simular la actualización del estado de rowsTable con los datos procesados
 			setRowsTable(arrayObjects);
+
 		})();
 	}, []);
 
@@ -147,26 +173,36 @@ function App() {
 				<h1>Reporte del Clima</h1>
 			</Grid>
 			{/* Aquí puedes renderizar tus componentes */}
-			<Grid xs={6} lg={2}>
+			<Grid xs={6} sm={4} md={3} lg={4}>
 				{indicators[0]}
 			</Grid>
-			<Grid xs={6} lg={2}>
+			<Grid xs={6} sm={4} md={3} lg={4}>
 				{indicators[1]}
 			</Grid>
-			<Grid xs={6} lg={2}>
+			<Grid xs={6} sm={4} md={3} lg={4}>
+				{indicators[6]}
+			</Grid>
+			<Grid xs={6} sm={4} md={3} lg={6}>
 				{indicators[2]}
 			</Grid>
-			<Grid xs={6} lg={2}>
+			<Grid xs={6} sm={4} md={3} lg={6}>
 				{indicators[3]}
 			</Grid>
-			<Grid xs={6} sm={4} md={3} lg={3}>
+			<Grid xs={6} sm={4} md={3} lg={4}>
+				{indicators[4]}
+			</Grid>
+			<Grid xs={6} sm={4} md={3} lg={4}>
+				{indicators[5]}
+			</Grid>
+			
+			<Grid xs={6} sm={4} md={3} lg={4}>
 				<Summary />
 			</Grid>
 			<Grid xs={6} sm={4} md={3} lg={12}>
 				{/* Renderizar la tabla básica con los datos */}
 				<BasicTable rows={rowsTable} />
 			</Grid>
-			<Grid xs={12} lg={12}>
+			<Grid xs={12} sm={4} md={3}lg={12}>
 				<Grid xs={12} lg={2}>
 					<ControlPanel />
 					<WeatherChart />
@@ -175,7 +211,7 @@ function App() {
 
 			{/*Agregado propio*/}
 			<Grid xs={12} sm={4} md={3} lg={12}>
-				<h1>Reporte del clima en otras</h1>
+				<h1>Reporte del clima en otras Ciudades</h1>
 				<Weather onWeatherChange={handleWeatherChange} />
 			</Grid>
 			<Grid xs={12} sm={4} md={3} lg={6}>

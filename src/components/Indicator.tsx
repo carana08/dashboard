@@ -44,7 +44,8 @@ export default function Indicator(config: Config) {
             sx={{
               p: 2,
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              marginTop: '10px'
             }}
           >
             <Typography component="h2" variant="h6" color="primary" gutterBottom>
