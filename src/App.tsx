@@ -10,6 +10,8 @@ import { WeatherData } from './interfaces/weatherData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './App.css';
 import { faCalendarAlt, faClock, faEarth, faLocationDot, faMapPin, faTemperatureHigh, faTemperatureLow } from '@fortawesome/free-solid-svg-icons';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
+
 interface RowData {
 	rangeHours: string;
 	windDirection: string;
@@ -89,14 +91,15 @@ function App() {
 				tempMin = "N/A";
 			}
 
-			let iconoUbicacion = <FontAwesomeIcon icon={faLocationDot} color='red' size='3x' />;
-			let iconoFecha = <FontAwesomeIcon icon={faCalendarAlt} color='#CB12F4' size='3x' />;
-			let iconoLatitud = <FontAwesomeIcon icon={faMapPin} color='#15E55A' size='3x' />;
-			let iconoLongitud = <FontAwesomeIcon icon={faMapPin} color='#BBBE09' size='3x' />;
-			let iconoPlaneta = <FontAwesomeIcon icon={faEarth} color='green' size='3x' />;
-			let iconoTempMax = <FontAwesomeIcon icon={faTemperatureHigh} color='red' size='3x' />;
-			let iconoTempMin = <FontAwesomeIcon icon={faTemperatureLow} color='#0B61A2' size='3x' />;
-			let iconoReloj = <FontAwesomeIcon icon={faClock} color='#0B61A2' size='3x' />;
+			// Ejemplo de cómo usar los íconos con el tipo correcto
+			let iconoUbicacion = <FontAwesomeIcon icon={faLocationDot as IconProp} color='red' size='3x' />;
+			let iconoFecha = <FontAwesomeIcon icon={faCalendarAlt as IconProp} color='#CB12F4' size='3x' />;
+			let iconoLatitud = <FontAwesomeIcon icon={faMapPin as IconProp} color='#15E55A' size='3x' />;
+			let iconoLongitud = <FontAwesomeIcon icon={faMapPin as IconProp} color='#BBBE09' size='3x' />;
+			let iconoPlaneta = <FontAwesomeIcon icon={faEarth as IconProp} color='green' size='3x' />;
+			let iconoTempMax = <FontAwesomeIcon icon={faTemperatureHigh as IconProp} color='red' size='3x' />;
+			let iconoTempMin = <FontAwesomeIcon icon={faTemperatureLow as IconProp} color='#0B61A2' size='3x' />;
+			let iconoReloj = <FontAwesomeIcon icon={faClock as IconProp} color='#0B61A2' size='3x' />;
 
 			dataToIndicators.push([iconoUbicacion, 'Ciudad', cityName]);
 			dataToIndicators.push([iconoPlaneta, 'geobaseid', geobaseid]);
